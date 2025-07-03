@@ -3,60 +3,91 @@
 #include "kernel.h"
 #include "timebase.h"
 #include "uart.h"
+
+#define FLASH_BASE           ((uint32_t)0x40022000)
+#define FLASH_ACR            (*(volatile uint32_t *)(FLASH_BASE + 0x00))
+
+#define RCC_CR               (*(volatile uint32_t *)(RCC_BASE + 0x00))
+#define RCC_CFGR             (*(volatile uint32_t *)(RCC_BASE + 0x04))
+
+#define FLASH_ACR_PRFTBE     (1 << 4)
+#define FLASH_ACR_LATENCY_2  (2 << 0)
+#define FLASH_ACR_LATENCY    (0x7 << 0)
+
+#define RCC_CR_HSEON         (1 << 16)
+#define RCC_CR_HSERDY        (1 << 17)
+#define RCC_CR_PLLON         (1 << 24)
+#define RCC_CR_PLLRDY        (1 << 25)
+
+#define RCC_CFGR_SW          (0x3 << 0)
+#define RCC_CFGR_SW_PLL      (0x2 << 0)
+#define RCC_CFGR_SWS         (0x3 << 2)
+#define RCC_CFGR_SWS_PLL     (0x2 << 2)
+
+#define RCC_CFGR_HPRE        (0xF << 4)
+#define RCC_CFGR_PPRE1       (0x7 << 8)
+#define RCC_CFGR_PPRE2       (0x7 << 11)
+
+#define RCC_CFGR_PPRE1_DIV2  (0x4 << 8)
+
+#define RCC_CFGR_PLLSRC      (1 << 16)
+#define RCC_CFGR_PLLMULL     (0xF << 18)
+#define RCC_CFGR_PLLMULL9    (0x7 << 18)
+
+#define GPIO_CRH(GPIO_BASE)  (*(volatile uint32_t *)((GPIO_BASE) + GPIO_CRH_OFFSET))
+#define GPIO_ODR(GPIO_BASE)  (*(volatile uint32_t *)((GPIO_BASE) + GPIO_ODR_OFFSET))
 uint32_t cnt;
 extern TCB_t *CurrentPt ;
 void task0(void);
+
 void SystemClock_Config(void)
 {
-    // HSE (High Speed External) - 8 MHz 
-    RCC->CR |= RCC_CR_HSEON;
-    while (!(RCC->CR & RCC_CR_HSERDY));  // 
+    // Enable HSE
+    RCC_CR |= RCC_CR_HSEON;
+    while (!(RCC_CR & RCC_CR_HSERDY));
 
-    // prefetch buffer & set wait state = 2 (for 72 MHz)
-    FLASH->ACR |= FLASH_ACR_PRFTBE;          // Prefetch enable
-    FLASH->ACR &= ~FLASH_ACR_LATENCY;        // Clear latency bits
-    FLASH->ACR |= FLASH_ACR_LATENCY_2;       // 2 wait states
+    // Prefetch + 2 WS for 72MHz
+    FLASH_ACR |= FLASH_ACR_PRFTBE;
+    FLASH_ACR &= ~FLASH_ACR_LATENCY;
+    FLASH_ACR |= FLASH_ACR_LATENCY_2;
 
-    // 3. Config PLL:
-    // PLL source = HSE, PLL = x9 --> 8MHz * 9 = 72MHz
-    RCC->CFGR &= ~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL); // Clear config
-    RCC->CFGR |= (RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL9); // HSE source, MUL = 9
+    // PLL config: HSE source, x9
+    RCC_CFGR &= ~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL);
+    RCC_CFGR |= (RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL9);
 
-    // 4. Config Prescaler:
-    RCC->CFGR &= ~RCC_CFGR_HPRE;            // AHB = SYSCLK / 1
-    RCC->CFGR &= ~RCC_CFGR_PPRE1;           // APB1 = HCLK / 1 
-    RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;       // APB1 = HCLK / 2 (max 36 MHz)
-    RCC->CFGR &= ~RCC_CFGR_PPRE2;           // APB2 = HCLK / 1
+    // Prescaler
+    RCC_CFGR &= ~RCC_CFGR_HPRE;
+    RCC_CFGR &= ~RCC_CFGR_PPRE1;
+    RCC_CFGR |= RCC_CFGR_PPRE1_DIV2;
+    RCC_CFGR &= ~RCC_CFGR_PPRE2;
 
-    // 5. Activate PLL
-    RCC->CR |= RCC_CR_PLLON;
-    while (!(RCC->CR & RCC_CR_PLLRDY));     // 
+    // Enable PLL
+    RCC_CR |= RCC_CR_PLLON;
+    while (!(RCC_CR & RCC_CR_PLLRDY));
 
-    // 6. Chuyển SYSCLK sang PLL
-    RCC->CFGR &= ~RCC_CFGR_SW;              // Clear bits
-    RCC->CFGR |= RCC_CFGR_SW_PLL;           // PLL = SYSCLK
-
-    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL); // 
+    // Switch SYSCLK to PLL
+    RCC_CFGR &= ~RCC_CFGR_SW;
+    RCC_CFGR |= RCC_CFGR_SW_PLL;
+    while ((RCC_CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 }
-// ====== Dummy Task ======
+
 void task0(void)
 {
-    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    RCC_APB2ENR |= RCC_APB2ENR_IOPCEN;
 
-    // PC13 as Output Push-Pull, max speed 2 MHz
-    GPIOC->CRH &= ~(0xF << 20);       // Clear 4 bits
-    GPIOC->CRH |=  (0x2 << 20);       // Output mode 2 MHz, Push-pull (00: GP output, 10: 2MHz)
+    // PC13: Output push-pull, 2 MHz
+    GPIO_CRH(GPIOC_BASE) &= ~(0xF << 20);
+    GPIO_CRH(GPIOC_BASE) |=  (0x2 << 20);
+
     UART1_SendString("Enter Task0! \r\n");
     while (1)
     {
-        // Reverse PC13
-        GPIOC->ODR ^= (1 << 13);
-
-        // Delay 500ms
+        GPIO_ODR(GPIOC_BASE) ^= (1 << 13);
         delay(500);
         UART1_SendString("Blinking! \r\n");
     }
 }
+
 
 
 // ====== Scheduler Launch Function ======

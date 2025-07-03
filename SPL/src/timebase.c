@@ -1,9 +1,16 @@
 #include "timebase.h"
+#define SYSTICK_BASE        (0xE000E010UL)
+#define SYSTICK_CTRL        (*(volatile uint32_t *)(SYSTICK_BASE + 0x00))
+#define SYSTICK_LOAD        (*(volatile uint32_t *)(SYSTICK_BASE + 0x04))
+#define SYSTICK_VAL         (*(volatile uint32_t *)(SYSTICK_BASE + 0x08))
 
+#define SYSTICK_CTRL_ENABLE     (1 << 0)
+#define SYSTICK_CTRL_TICKINT    (1 << 1)
+#define SYSTICK_CTRL_CLKSOURCE  (1 << 2)
 #define MAX_DELAY 0xFFFFFFFF
-__IO uint32_t g_curr_tick;
-__IO uint32_t g_curr_tick_p;
-__IO uint32_t tick_freq =1;
+volatile uint32_t g_curr_tick;
+volatile uint32_t g_curr_tick_p;
+volatile uint32_t tick_freq =1;
 void sram_test_write(void)
 {
     volatile uint32_t *p = (uint32_t *)0x20003ff0;
@@ -23,38 +30,22 @@ void sram_test_write(void)
     // Đặt breakpoint tại đây để kiểm tra các giá trị
     (void)r0; (void)r1; (void)r2; (void)r3;
 }
-void Sys_Init(void){
-/*************Config for SYSTICK in SysTick Control Reg******************
-	*Bit[0]-ENABLE: the Counter Enable Bit, set to 1 to Enable the counter. 
-	*Bit[1]-TICKINT: Enables SysTick exception request:
-						0 = counting down to zero does not assert the SysTick exception request
-						1 = counting down to zero asserts the SysTick exception request.
-	*Bit[2]-CLKSOURCE: Indicates the clock source:
-						0 = external clock
-						1 - processor clock
-	*Bit[16]-COUNTFLAG: Returns 1 if timer counted to 0 since last time this was read.
-	*/
-	
-/*************Config SysTick Reload value in SysTick Reload Value Reg******************
-	*24 bits[0-23] hold the Reload Value:
-	-f(sys) = number of clocks per second.
-	-Reload Value is the number of clock to count after reload.
-	*/
 
-/*************Steps to reload SysTick:*/
-	/*1/Reload timer with number of cycles per second.*/
-	//F(sys) = 72000000Hz, RealoadValue = 72000000 => Reload After 1 second.
-	SysTick->LOAD = 72000-1;
-	/*2/Clear Current Value Reg.*/
-	SysTick->VAL = 0;
-	/*3/Select Internal Clock Source.*/
-	SysTick->CTRL |= 1<<2;
-	/*4/Enable Interupt.*/
-	SysTick->CTRL |= 1<<1;
-	/*5/Enable Systick.*/
-	SysTick->CTRL |= 1<<0;
-	/*6/Enable Global Interupt.*/
-	__enable_irq();
+static inline void __enable_irq(void)
+{
+    __asm volatile ("cpsie i");
+}
+static inline void __disable_irq(void)
+{
+    __asm volatile ("cpsid i");
+}
+void Sys_Init(void) {
+    SYSTICK_LOAD = 72000 - 1;                 // Reload after 1ms at 72MHz
+    SYSTICK_VAL = 0;                          // Clear current value
+    SYSTICK_CTRL = SYSTICK_CTRL_CLKSOURCE     // Use processor clock
+                 | SYSTICK_CTRL_TICKINT       // Enable interrupt
+                 | SYSTICK_CTRL_ENABLE;       // Enable SysTick
+    __enable_irq();                           // Enable global interrupts
 }
 
 void Tick_Increment(void){
