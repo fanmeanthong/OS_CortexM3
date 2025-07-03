@@ -83,8 +83,8 @@ void task0(void)
     while (1)
     {
         GPIO_ODR(GPIOC_BASE) ^= (1 << 13);
-        delay(1000);
-        UART1_SendString("Blinking! \r\n");
+        delay(500);
+        UART1_SendString("Blinking Task 0! \r\n");
     }
 }
 
@@ -102,7 +102,7 @@ int main(void)
     log_stack(CurrentPt->stackPt);
     osSchedulerLaunch();
 
-    while (1); // 
+    while (1);  
 }
 
 

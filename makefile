@@ -1,45 +1,45 @@
-# Makefile để build dự án Blink LED cho STM32F103 (no HAL/SPL)
+# Makefile for STM32F103 (non HAL/SPL)
 
-# Tên file đầu ra
+# Output filename
 TARGET = OsExample
 
-# Trình biên dịch và các flags
+# Compiler & flags
 CC      = arm-none-eabi-gcc
 CFLAGS  = -mcpu=cortex-m3 -mthumb -O0 -g -Wall -ffreestanding -nostdlib \
 			-ISys/inc
 LDFLAGS = -T stm32f103.ld -nostdlib -Wl,--gc-sections
 
-# Danh sách file nguồn
+# Source files list
 SRCS_C := main.c $(wildcard Sys/src/*.c)
 SRCS_S := startup_stm32f103.s $(wildcard Sys/asm/*.s)
 SRCS   := $(SRCS_C) $(SRCS_S)
 OBJS   := $(SRCS:.c=.o)
 OBJS   := $(OBJS:.s=.o)
 
-# Mục tiêu mặc định
+# Default Target
 all: $(TARGET).bin
 
-# Compile file C
+# Compile C
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Assemble file ASM
+# Assemble ASM
 %.o: %.s
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Link thành ELF
+# Link ELF
 $(TARGET).elf: $(OBJS) stm32f103.ld
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@
 
-# Tạo file .bin từ .elf
+# Create .bin from .elf
 $(TARGET).bin: $(TARGET).elf
 	arm-none-eabi-objcopy -O binary $< $@
 
-# Nạp firmware vào Blue Pill (dùng file .bin)
+# Flash firmware into Blue Pill (file .bin)
 flash: $(TARGET).bin
 	openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c "program $(TARGET).bin 0x08000000 verify reset exit"
 
-# Xóa file tạm
+# Delete unneeded files
 clean:
 	del /Q *.o *.elf *.bin 2>nul
 	del /Q Sys\\src\\*.o 2>nul

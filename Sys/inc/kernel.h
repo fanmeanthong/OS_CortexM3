@@ -7,5 +7,7 @@ typedef struct tcb {
     */
 } TCB_t;
 __attribute__((naked)) void osSchedulerLaunch(void);
+
 uint32_t *osKernelStackInit(int i, void (*task_func)(void));
+
 TCB_t *osKernelCreateTask(void (*task_func)(void));

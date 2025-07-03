@@ -44,10 +44,10 @@ TCB_t *osKernelCreateTask(void (*task_func)(void))
     if (taskCount >= NUM_OF_THREADS)
         return 0;
 
-    // Khởi tạo stack cho task mới
+    // Init Stack for New task
     uint32_t *sp = osKernelStackInit(taskCount, task_func);
 
-    // Thiết lập TCB
+    // Init TCB
     tcbs[taskCount].stackPt = sp;
 
     taskCount++;

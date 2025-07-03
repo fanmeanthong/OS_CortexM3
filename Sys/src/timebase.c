@@ -11,25 +11,6 @@
 volatile uint32_t g_curr_tick;
 volatile uint32_t g_curr_tick_p;
 volatile uint32_t tick_freq =1;
-void sram_test_write(void)
-{
-    volatile uint32_t *p = (uint32_t *)0x20003ff0;
-
-    // Ghi dữ liệu mẫu
-    p[0] = 0xDEADBEEF;
-    p[1] = 0xCAFEBABE;
-    p[2] = 0x12345678;
-    p[3] = 0x87654321;
-
-    // Đọc lại để đảm bảo compiler không bỏ qua
-    volatile uint32_t r0 = p[0];
-    volatile uint32_t r1 = p[1];
-    volatile uint32_t r2 = p[2];
-    volatile uint32_t r3 = p[3];
-
-    // Đặt breakpoint tại đây để kiểm tra các giá trị
-    (void)r0; (void)r1; (void)r2; (void)r3;
-}
 
 static inline void __enable_irq(void)
 {
@@ -39,6 +20,7 @@ static inline void __disable_irq(void)
 {
     __asm volatile ("cpsid i");
 }
+
 void Sys_Init(void) {
     SYSTICK_LOAD = 72000 - 1;                 // Reload after 1ms at 72MHz
     SYSTICK_VAL = 0;                          // Clear current value
@@ -71,5 +53,5 @@ void delay(uint32_t delay){
 	while((get_tick()- tick_start) < wait){}
 }	
 void SysTick_Handler(){
-    g_curr_tick += tick_freq; // Break Point Ở đây
+    g_curr_tick += tick_freq; //
 }
