@@ -83,7 +83,7 @@ void task0(void)
     while (1)
     {
         GPIO_ODR(GPIOC_BASE) ^= (1 << 13);
-        delay(500);
+        delay(1000);
         UART1_SendString("Blinking! \r\n");
     }
 }

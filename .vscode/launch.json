@@ -7,7 +7,7 @@
       "request": "launch",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/blinkled.elf", // 
+      "executable": "${workspaceFolder}/OsExample.elf", // 
       "device": "STM32F103C8",
       "configFiles": [
         "interface/stlink.cfg",

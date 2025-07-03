@@ -1,2 +1,3 @@
 # OS_Example
-Example for RTOS on STM32F103C8T6 - VSCode
+Sample project for STM32F103C8T6 Bare Metal Code on VSCode!
+
