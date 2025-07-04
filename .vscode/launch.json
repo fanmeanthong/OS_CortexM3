@@ -14,16 +14,16 @@
         "target/stm32f1x.cfg"
       ],
       "runToMain": true,
-      "svdFile": "${workspaceFolder}/STM32F103.svd", // giúp hiển thị thanh ghi và stack chính xác
+      "svdFile": "${workspaceFolder}/STM32F103.svd", //
       "preLaunchTask": "build",
       "postLaunchCommands": [
-        "monitor reset halt",     // Reset và dừng tại main
-        "load",                   // Nạp lại firmware
+        "monitor reset halt",     // 
+        "load",                   // 
         "monitor arm semihosting enable"
       ],
       "showDevDebugOutput": true,
       "monitorRunCommands": [
-        "break SysTick_Handler"  // Tự đặt breakpoint vào ngắt
+        "break SysTick_Handler"  // 
       ],
       "registers": [
         "r0", "r1", "r2", "r3", "r12", "lr", "pc", "xPSR", "sp", "msp", "psp"
