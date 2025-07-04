@@ -22,9 +22,6 @@
         "monitor arm semihosting enable"
       ],
       "showDevDebugOutput": true,
-      "monitorRunCommands": [
-        "break SysTick_Handler"  // 
-      ],
       "registers": [
         "r0", "r1", "r2", "r3", "r12", "lr", "pc", "xPSR", "sp", "msp", "psp"
       ],
