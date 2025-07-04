@@ -49,4 +49,12 @@
 #define RCC_APB1ENR_CAN1EN    ((uint32_t)0x02000000)
 #define RCC_APB1ENR_CAN2EN    ((uint32_t)0x04000000)
 
+#define SCB_BASE            (0xE000ED00UL)
+#define SCB_SHPR3           (*(volatile uint32_t *)(SCB_BASE + 0x20))  // System Handler Priority Register 3
+
+#define PENDSV_PRIO_SHIFT   16
+#define PENDSV_PRIO_MASK    (0xFF << PENDSV_PRIO_SHIFT)
+
+#define SCB_ICSR           (*(volatile uint32_t *)(0xE000ED04UL))  // Interrupt Control and State Register
+#define SCB_ICSR_PENDSVSET (1 << 28)                               // Set-pending PendSV bit
 #endif // __STM32F10X_H

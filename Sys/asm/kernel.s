@@ -31,7 +31,7 @@ osSchedulerLaunch:
 .size osSchedulerLaunch, . - osSchedulerLaunch
 
 
-/*// ====== PendSV: Context Switch ======
+// ====== PendSV: Context Switch ======
 .type PendSV_Handler, %function
 PendSV_Handler:
     // Save current task context
@@ -43,8 +43,8 @@ PendSV_Handler:
     STR     R0, [R2]              // Save PSP to CurrentPt->stackPt
 
     // Switch to next task
-    LDR     R2, [R2, #4]          // R2 = CurrentPt->next
-    STR     R2, [R1]              // CurrentPt = CurrentPt->next
+    LDR     R2, [R2, #4]          // R2 = CurrentPt->nextPt
+    STR     R2, [R1]              // CurrentPt = CurrentPt->nextPt
 
     LDR     R0, [R2]              // R0 = CurrentPt->stackPt
     LDMIA   R0!, {R4-R11}         // Restore R4–R11
@@ -53,4 +53,3 @@ PendSV_Handler:
     BX      LR
 
 .size PendSV_Handler, . - PendSV_Handler
-*/

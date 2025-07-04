@@ -36,6 +36,8 @@
 
 #define GPIO_CRH(GPIO_BASE)  (*(volatile uint32_t *)((GPIO_BASE) + GPIO_CRH_OFFSET))
 #define GPIO_ODR(GPIO_BASE)  (*(volatile uint32_t *)((GPIO_BASE) + GPIO_ODR_OFFSET))
+
+
 uint32_t cnt;
 extern TCB_t *CurrentPt ;
 void task0(void);
@@ -83,25 +85,30 @@ void task0(void)
     while (1)
     {
         GPIO_ODR(GPIOC_BASE) ^= (1 << 13);
-        delay(500);
+        delay(2500);
         UART1_SendString("Blinking Task 0! \r\n");
     }
 }
 
-
+void task1(void){
+    while(1){
+        UART1_SendString("Blinking Task 1! \r\n");
+        cnt++;
+        delay(2500);
+    }
+}
 
 // ====== Scheduler Launch Function ======
              
 int main(void)
 {
     SystemClock_Config();
-    Sys_Init();
     UART1_Init();
    
     osKernelCreateTask(task0);
-    log_stack(CurrentPt->stackPt);
-    osSchedulerLaunch();
-
+    osKernelCreateTask(task1);
+    UART1_SendString("Entering OS !\r\n");
+    osInit();
     while (1);  
 }
 

@@ -2,6 +2,7 @@
 // ====== TCB Structure ======
 typedef struct tcb {
     uint32_t *stackPt;
+    struct tcb *nextPt;
     /*
     More Task Info
     */
@@ -11,3 +12,5 @@ __attribute__((naked)) void osSchedulerLaunch(void);
 uint32_t *osKernelStackInit(int i, void (*task_func)(void));
 
 TCB_t *osKernelCreateTask(void (*task_func)(void));
+
+void osInit(void);

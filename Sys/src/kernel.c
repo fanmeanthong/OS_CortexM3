@@ -1,6 +1,7 @@
 #include "kernel.h"
+#include "timebase.h"
 // ====== Constants ======
-#define NUM_OF_THREADS 1
+#define NUM_OF_THREADS 4
 #define STACK_SIZE     128
 #define INITIAL_XPSR   0x01000000
 
@@ -49,8 +50,18 @@ TCB_t *osKernelCreateTask(void (*task_func)(void))
 
     // Init TCB
     tcbs[taskCount].stackPt = sp;
-
+    if (taskCount > 0)
+    {
+        tcbs[taskCount - 1].nextPt = &tcbs[taskCount];
+        tcbs[taskCount].nextPt = &tcbs[0];
+    }
     taskCount++;
-    CurrentPt = &tcbs[0];
     return &tcbs[taskCount - 1];
+}
+
+void osInit(void){
+    CurrentPt = &tcbs[0];
+    log_stack(CurrentPt->stackPt);
+    Sys_Init();
+    osSchedulerLaunch();
 }

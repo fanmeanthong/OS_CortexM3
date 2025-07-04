@@ -22,7 +22,7 @@ static inline void __disable_irq(void)
 }
 
 void Sys_Init(void) {
-    SYSTICK_LOAD = 72000 - 1;                 // Reload after 1ms at 72MHz
+    SYSTICK_LOAD = 7200 - 1;                 // Reload after 1ms at 72MHz
     SYSTICK_VAL = 0;                          // Clear current value
     SYSTICK_CTRL = SYSTICK_CTRL_CLKSOURCE     // Use processor clock
                  | SYSTICK_CTRL_TICKINT       // Enable interrupt
@@ -54,4 +54,6 @@ void delay(uint32_t delay){
 }	
 void SysTick_Handler(){
     g_curr_tick += tick_freq; //
+	SCB_ICSR |= SCB_ICSR_PENDSVSET;
+	
 }
