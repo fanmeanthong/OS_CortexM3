@@ -6,6 +6,7 @@
         "stdio.h": "c",
         "stm32f10x.h": "c",
         "kernel.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdint.h": "c"
     }
 }
